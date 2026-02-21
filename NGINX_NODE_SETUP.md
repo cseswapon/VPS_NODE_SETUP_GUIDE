@@ -218,6 +218,8 @@ If you want to run multiple Node.js processes and distribute traffic:
 
    ```nginx
    upstream travel_app {
+       least_conn;   # load balancing method
+   
        server 127.0.0.1:5000;
        server 127.0.0.1:5001;
        server 127.0.0.1:5002;
@@ -231,9 +233,17 @@ If you want to run multiple Node.js processes and distribute traffic:
        location / {
            proxy_pass http://travel_app;
            proxy_http_version 1.1;
+   
+           # WebSocket support
            proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
+           proxy_set_header Connection $connection_upgrade;
+   
+           # Important headers for real client IP
            proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+   
            proxy_cache_bypass $http_upgrade;
        }
    }
